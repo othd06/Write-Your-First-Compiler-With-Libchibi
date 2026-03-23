@@ -1,0 +1,18 @@
+
+This repository contains both written content and code examples. The following licenses apply:
+
+1. Book content (all content in the repository not specified under later sections of this list):
+   Licensed under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0).
+
+2. Code/Grammar examples (all example code and grammar definitions such as EBNF, whether included as blocks in the text or as separate files):
+   Dual-licensed under:
+   - Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0), and
+   - The MIT License.
+
+   You may use the code and grammar examples under either license.
+
+Summary:
+- Text → CC BY-SA 4.0 only
+- Code/Grammar → CC BY-SA 4.0 OR MIT (your choice)
+
+See LICENCE-CC-BY-SA.txt and LICENCE-MIT.txt for full license texts.
