@@ -13,7 +13,43 @@
 #include <stdbool.h>
 #include "helpers.h"
 
+typedef enum {
+    TOK_STRING_LITERAL,
+    TOK_BOOL_LITERAL,
+    TOK_INTEGER_LITERAL,
+    TOK_DECIMAL_LITERAL,
+    TOK_IDENTIFIER,
+    TOK_KEYWORD_STRING,
+    TOK_KEYWORD_F80,
+    TOK_KEYWORD_F64,
+    TOK_KEYWORD_F32,
+    TOK_KEYWORD_U64,
+    TOK_KEYWORD_U32,
+    TOK_KEYWORD_U16,
+    TOK_KEYWORD_U8,
+    TOK_KEYWORD_I64,
+    TOK_KEYWORD_I32,
+    TOK_KEYWORD_I16,
+    TOK_KEYWORD_I8,
+    TOK_KEYWORD_BOOL,
+    TOK_KEYWORD_BODY,
+    TOK_KEYWORD_PROC,
+    TOK_KEYWORD_DEFINE,
+    TOK_L_PAREN,
+    TOK_R_PAREN,
+    TOK_EOF,
+} TokenKind;
 
+typedef struct {
+    TokenKind kind;
+    union {
+        char* string_literal;
+        bool bool_literal;
+        long integer_literal;
+        long double decimal_literal;
+        char* identifier;
+    } data;
+} Token;
 
 
 Seq(Token) tokenise(char* plaintext);
@@ -127,6 +163,9 @@ Seq(Token) tokenise(char* plaintext) {
         }
     }
 
+    Token eof_token;
+    eof_token.kind = TOK_EOF;
+    append(Token, tokens, eof_token);
     return tokens;
 }
 

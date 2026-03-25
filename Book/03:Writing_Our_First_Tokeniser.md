@@ -409,5 +409,14 @@ Don't forget as well to import the correct headers at the start of the header se
   * \<stdbool.h>
   * and, of course, "helpers.h"
 
+Before we finish though, you will find that when writing the parse it's helpful to have a token denoting the end of the file. Adding this is very easy. Simply add an element TOK_EOF to the TokenKind union and then, before returning from the tokenise function make sure to add an eof token:
+```c
+//return
+Token eof_token;
+eof_token.kind = TOK_EOF;
+append(Token, tokens, eof_token);
+return tokens;
+```
+
 Next chapter we will look at different parsing techniques as well as the specific format expected by Libchibi in preparation for taking the output of this tokeniser and actually parsing it to compile our very first program.
 
