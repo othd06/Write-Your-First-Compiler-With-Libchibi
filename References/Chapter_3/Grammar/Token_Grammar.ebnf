@@ -5,6 +5,7 @@
 <keyword_define> ::= "define";
 <keyword_proc> ::= "proc";
 <keyword_body> ::= "body";
+<keyword_return> ::= "return";
 
 <keyword_bool> ::= "bool";
 <keyword_i8>  ::= "i8";

@@ -68,6 +68,7 @@ Let's start by reminding ourselves of our token grammar (the grammar below the d
 <keyword_define> ::= "define";
 <keyword_proc> ::= "proc";
 <keyword_body> ::= "body";
+<keyword_return> ::= "return";
 
 <keyword_bool> ::= "bool";
 <keyword_i8>  ::= "i8";
@@ -128,6 +129,7 @@ typedef enum {
     TOK_KEYWORD_BODY,
     TOK_KEYWORD_PROC,
     TOK_KEYWORD_DEFINE,
+    TOK_KEYWORD_RETURN,
     TOK_L_PAREN,
     TOK_R_PAREN,
 } TokenKind;
@@ -148,24 +150,24 @@ As you can see our token contains two elements: the kind of token, and a union c
 
 Now we need a function that can take in a string of chars and return a string of these tokens. For this we will use a data structure that I am calling a Seq but that you might know as a Vector from C++.
 ```c
-#define Seq(T) struct {T* data; long len; long cap}
-#define append(T, SEQ, VAL) {\
-Seq(T)* seq = &SEQ;\
+#define DeclareSeq(T, Name) typedef struct {T* data; long len; long cap;} Name
+#define append(Name, SEQ, VAL) do {\
+Name* seq = &SEQ;\
 if(seq->len >= seq->cap) {\
     if(seq->cap == 0) seq->cap = 1;\
-    T* old_data = seq->data;\
+    void* old_data = seq->data;\
     seq->cap *= 2;\
-    seq->data = calloc(seq->cap, sizeof(T));\
+    seq->data = calloc(seq->cap, sizeof(VAL));\
     if (old_data != NULL) {\
-        memcpy(seq->data, old_data, seq->len*sizeof(T));\
+        memcpy(seq->data, old_data, seq->len*sizeof(VAL));\
         free(old_data);\
     }\
 }\
 seq->data[seq->len] = VAL;\
 seq->len += 1;\
-}
+} while (0)
 ```
-This may look a touch weird because we're using C preprocessor macros rather than functions or standard typedefs to define the Seq and the append operation. This is so that these macros work for any type of Seq without having to re-implement Seqs for every type we might possibly want. I won't go into too much detail about how it works here since the point of this book isn't to explain Seqs or C macros but I encourage you to try to understand what the code is doing under the hood. The main takeaway is that Seqs are an array of a dynamic length that automatically grow when we try to add an element without having enough space (just like Vectors in C++).
+This may look a touch weird because we're using C preprocessor macros rather than functions or standard typedefs to define the Seq and the append operation. This is because we want to be able to declare Seq types for any underlying base type and we want our append to work for that type.
 
 A final note before moving on. We free the old_data when growing the Seq. This makes sense because for a large Seq it's likely that we will produce many smaller data allocations that we absolutely don't need later so we may as well clean them up however, libchibi is designed to allocate with calloc (like malloc but zero-initialises the allocated memory) and basically never free. This is because, for a program like a compiler that runs once, executes, then quits and hands all its system resources back to the operating system rather than running continuously in a loop, it's fine to leak some memory and rely on the OS to clean it up. So you wont be seeing a lot of frees throughout this book. This obviously looks a bit weird but it massively simplifies our code since we never have to think about who owns a piece of memory since the answer is generally no-one.
 
@@ -180,18 +182,25 @@ int string_in_array(char* string, char* array[], int array_len) {
 ```
 Of course, don't forget to copy the signature into the header section of helpers.h. This will help us later to decide if a token is an identifier or a keyword.
 
+In this module we are also going to need a few Seq types so let's declare them in the header section now:
+```c
+DeclareSeq(Token, Token_Seq);
+DeclareSeq(char, char_Seq);
+```
+
 We can now declare our function in the header section of tokeniser.h (remembering to place it below both the definition of Token and the import line for helpers.h):
 ```c
-Seq(Token) tokenise(char* plaintext);
+Token_Seq tokenise(char* plaintext);
 ```
 That's it. The entire signature. All of the complexity in our tokeniser lives inside the implementation. Finally, after all this setup, we can start to write our actual tokeniser. The tokeniser will run in a loop iterating through the string and emitting tokens as soon as they are ready. It is, after all, the role of the tokeniser to determine when a token is complete and ready to emit. We need a few things as setup though. Specifically our tokeniser will want an index to track how far through the string it is, a Seq of tokens to add new tokens to (and ultimately to return), and a dictionary of keywords to compare against. So let's build that.
 ```c
-Seq(Token) tokenise(char* plaintext) {
+Token_Seq tokenise(char* plaintext) {
     int index = 0;
-    Seq(Token) tokens = {0};
+    Token_Seq tokens = {0};
     char* keyword_strings[] = {"string", "f80", "f64",
         "f32", "u64", "u32", "u16", "u8", "i64", "i32",
-        "i16", "i8", "bool", "body", "proc", "define"};
+        "i16", "i8", "bool", "body", "proc", "define",
+        "return"};
     TokenKind keyword_kinds[] = {TOK_KEYWORD_STRING,
         TOK_KEYWORD_F80, TOK_KEYWORD_F64,
         TOK_KEYWORD_F32, TOK_KEYWORD_U64,
@@ -200,7 +209,7 @@ Seq(Token) tokenise(char* plaintext) {
         TOK_KEYWORD_I32, TOK_KEYWORD_I16,
         TOK_KEYWORD_I8, TOK_KEYWORD_BOOL,
         TOK_KEYWORD_BODY, TOK_KEYWORD_PROC,
-        TOK_KEYWORD_DEFINE};
+        TOK_KEYWORD_DEFINE, TOK_KEYWORD_RETURN};
     
     //tokenisation loop here...
 
@@ -211,12 +220,13 @@ Note that the order of the strings corresponds exactly with the order of the tok
 
 We can then start to write our main loop. The loop will run until the character at index **index** of the plaintext string is '\0' (indicating the end of the string) and we can branch within the loop based on if the character is alphabetical, a digit, whitespace, or symbolic. We can use the standard C functions isalpha, isdigit, and isspace for this.
 ```c
-Seq(Token) tokenise(char* plaintext) {
+Token_Seq tokenise(char* plaintext) {
     int index = 0;
-    Seq(Token) tokens = {0};
+    Token_Seq tokens = {0};
     char* keyword_strings[] = {"string", "f80", "f64",
         "f32", "u64", "u32", "u16", "u8", "i64", "i32",
-        "i16", "i8", "bool", "body", "proc", "define"};
+        "i16", "i8", "bool", "body", "proc", "define",
+        "return"};
     TokenKind keyword_kinds[] = {TOK_KEYWORD_STRING,
         TOK_KEYWORD_F80, TOK_KEYWORD_F64,
         TOK_KEYWORD_F32, TOK_KEYWORD_U64,
@@ -225,7 +235,7 @@ Seq(Token) tokenise(char* plaintext) {
         TOK_KEYWORD_I32, TOK_KEYWORD_I16,
         TOK_KEYWORD_I8, TOK_KEYWORD_BOOL,
         TOK_KEYWORD_BODY, TOK_KEYWORD_PROC,
-        TOK_KEYWORD_DEFINE};
+        TOK_KEYWORD_DEFINE, TOK_KEYWORD_RETURN};
     
     while (plaintext[index] != '\0') {
         if (isalpha(plaintext[index])) {
@@ -262,7 +272,7 @@ else if (plaintext[index] == '(') {
     index++;
     Token new_token;
     new_token.kind = TOK_L_PAREN;
-    append(Token, tokens, new_token);
+    append(Token_Seq, tokens, new_token);
 }
 ```
 ```c
@@ -271,7 +281,7 @@ else if (plaintext[index] == ')') {
     index++;
     Token new_token;
     new_token.kind = TOK_R_PAREN;
-    append(Token, tokens, new_token);
+    append(Token_Seq, tokens, new_token);
 }
 ```
 As you can see we simply increment the index by one to consume the character then, in the case of parens: create a new token, set its type appropriately, and append it to the list of tokens to be returned.
@@ -282,31 +292,31 @@ So let's see what that looks like:
 ```c
 //alphabetical
 if (isalpha(plaintext[index])) {
-    Seq(char) token_string = {0};
+    char_Seq token_string = {0};
     while (isalpha(plaintext[index]) || isdigit(plaintext[index]) || plaintext[index] == '_') {
-        append(char, token_string, plaintext[index++]);
+        append(char_Seq, token_string, plaintext[index++]);
     }
-    append(char, token_string, '\0');
+    append(char_Seq, token_string, '\0');
     int keyword_index = string_in_array(token_string.data, keyword_strings, sizeof(keyword_strings)/sizeof(char*));
     if (strcmp(token_string.data, "true") == 0) {
         Token new_token;
         new_token.kind = TOK_BOOL_LITERAL;
         new_token.data.bool_literal = true;
-        append(Token, tokens, new_token);
+        append(Token_Seq, tokens, new_token);
     } else if (strcmp(token_string.data, "false") == 0) { 
         Token new_token;
         new_token.kind = TOK_BOOL_LITERAL;
         new_token.data.bool_literal = false;
-        append(Token, tokens, new_token);
+        append(Token_Seq, tokens, new_token);
     }else if (keyword_index == -1) {
         Token new_token;
         new_token.kind = TOK_IDENTIFIER;
         new_token.data.identifier = token_string.data;
-        append(Token, tokens, new_token);
+        append(Token_Seq, tokens, new_token);
     } else {
         Token new_token;
         new_token.kind = keyword_kinds[keyword_index];
-        append(Token, tokens, new_token);
+        append(Token_Seq, tokens, new_token);
     }
 }
 ```
@@ -317,16 +327,16 @@ It is relatively trivial, now, to see how we would do the same thing for the str
 //string_literal
 else if (plaintext[index] == '"') {
     index++; //consume the opening quote
-    Seq(char) token_string = {0};
+    char_Seq token_string = {0};
     while (plaintext[index] != '"') {
-        append(char, token_string, plaintext[index++]);
+        append(char_Seq, token_string, plaintext[index++]);
     }
-    append(char, token_string, '\0');
+    append(char_Seq, token_string, '\0');
     index++; // consume the closing quote
     Token new_token;
     new_token.kind = TOK_STRING_LITERAL;
     new_token.data.string_literal = token_string.data;
-    append(Token, tokens, new_token);
+    append(Token_Seq, tokens, new_token);
 }
 ```
 All of a sudden our tokeniser is almost done. We can even add the ability to escape quotes by checking if the last character in our string is a backslash like this:
@@ -334,16 +344,16 @@ All of a sudden our tokeniser is almost done. We can even add the ability to esc
 //string_literal
 else if (plaintext[index] == '"') {
     index++; //consume the opening quote
-    Seq(char) token_string = {0};
+    char_Seq token_string = {0};
     while ((token_string.len > 0 && token_string.data[token_string.len-1] == '\\') || plaintext[index] != '"')  {
-        append(char, token_string, plaintext[index++]);
+        append(char_Seq, token_string, plaintext[index++]);
     }
-    append(char, token_string, '\0');
+    append(char_Seq, token_string, '\0');
     index++; // consume the closing quote
     Token new_token;
     new_token.kind = TOK_STRING_LITERAL;
     new_token.data.string_literal = token_string.data;
-    append(Token, tokens, new_token);
+    append(Token_Seq, tokens, new_token);
 }
 ```
 Now the only remaining case is when we find a leading digit.
@@ -363,7 +373,7 @@ else if (isdigit(plaintext[index])) {
         Token new_token;
         new_token.kind = TOK_INTEGER_LITERAL;
         new_token.data.integer_literal = token_integer_1;
-        append(Token, tokens, new_token);
+        append(Token_Seq, tokens, new_token);
     } else {
         index++;
 
@@ -380,7 +390,7 @@ else if (isdigit(plaintext[index])) {
         Token new_token;
         new_token.kind = TOK_DECIMAL_LITERAL;
         new_token.data.decimal_literal = token_float;
-        append(Token, tokens, new_token);
+        append(Token_Seq, tokens, new_token);
     }
 }
 ```
@@ -414,7 +424,7 @@ Before we finish though, you will find that when writing the parse it's helpful 
 //return
 Token eof_token;
 eof_token.kind = TOK_EOF;
-append(Token, tokens, eof_token);
+append(Token_Seq, tokens, eof_token);
 return tokens;
 ```
 

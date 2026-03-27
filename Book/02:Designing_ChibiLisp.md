@@ -96,6 +96,7 @@ We can start to think about how we might define this particular statement in EBN
 <keyword_define> ::= "define";
 <keyword_proc> ::= "proc";
 <keyword_body> ::= "body";
+<keyword_return> ::= "return";
 
 <keyword_bool> ::= "bool";
 <keyword_i8>  ::= "i8";
@@ -208,6 +209,7 @@ Then we will parse these tokens to create the AST in the parser stage. At this p
 <keyword_define> ::= "define";
 <keyword_proc> ::= "proc";
 <keyword_body> ::= "body";
+<keyword_return> ::= "return";
 
 <keyword_bool> ::= "bool";
 <keyword_i8>  ::= "i8";

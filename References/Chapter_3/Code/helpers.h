@@ -8,22 +8,22 @@
 
 
 
-#define Seq(T) struct {T* data; long len; long cap}
-#define append(T, SEQ, VAL) {\
-Seq(T)* seq = &SEQ;\
+#define DeclareSeq(T, Name) typedef struct {T* data; long len; long cap;} Name
+#define append(Name, SEQ, VAL) do {\
+Name* seq = &SEQ;\
 if(seq->len >= seq->cap) {\
     if(seq->cap == 0) seq->cap = 1;\
-    T* old_data = seq->data;\
+    void* old_data = seq->data;\
     seq->cap *= 2;\
-    seq->data = calloc(seq->cap, sizeof(T));\
+    seq->data = calloc(seq->cap, sizeof(VAL));\
     if (old_data != NULL) {\
-        memcpy(seq->data, old_data, seq->len*sizeof(T));\
+        memcpy(seq->data, old_data, seq->len*sizeof(VAL));\
         free(old_data);\
     }\
 }\
 seq->data[seq->len] = VAL;\
 seq->len += 1;\
-}
+} while (0)
 
 int string_in_array(char* string, char* array[], int array_len);
 
