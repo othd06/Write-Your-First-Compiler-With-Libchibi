@@ -1,0 +1,77 @@
+
+<l_paren> ::= "(";
+<r_paren> ::= ")";
+<symbol_plus> ::= "+";
+<symbol_minus> ::= "-";
+<symbol_times> ::= "*";
+<symbol_divide> ::= "/";
+<symbol_modulo> ::= "%";
+<symbol_eq> ::= "=";
+<symbol_neq> ::= "/=";
+<symbol_gt> ::= ">";
+<symbol_ge> ::= ">=";
+<symbol_lt> ::= "<";
+<symbol_le> ::= "<=";
+
+<keyword_define> ::= "define";
+<keyword_proc> ::= "proc";
+<keyword_body> ::= "body";
+<keyword_return> ::= "return";
+<keyword_extern> ::= "extern";
+<keyword_var> ::= "var";
+<keyword_assign> ::= "assign";
+<keyword_if> ::= "if";
+<keyword_elif> ::= "elif";
+<keyword_else> ::= "else";
+<keyword_while> ::= "while";
+<keyword_break> ::= "break";
+<keyword_continue> ::= "continue";
+<keyword_log> ::= "log";
+<keyword_and> ::= "and";
+<keyword_or> ::= "or";
+<keyword_not> ::= "not";
+<keyword_xor> ::= "xor";
+<keyword_bit> ::= "bit";
+<keyword_shl> ::= "shl";
+<keyword_shr> ::= "shr";
+<keyword_void> ::= "void";
+<keyword_ptr> ::= "ptr";
+<keyword_to> ::= "to";
+<keyword_from> ::= "from";
+<keyword_allocate> ::= "allocate";
+<keyword_of> ::= "of";
+<keyword_free> ::= "free";
+<keyword_sizeof> ::= "sizeof";
+
+<keyword_bool> ::= "bool";
+<keyword_i8>  ::= "i8";
+<keyword_i16> ::= "i16";
+<keyword_i32> ::= "i32";
+<keyword_i64> ::= "i64";
+<keyword_u8>  ::= "u8";
+<keyword_u16> ::= "u16";
+<keyword_u32> ::= "u32";
+<keyword_u64> ::= "u64";
+<keyword_f32> ::= "f32";
+<keyword_f64> ::= "f64";
+<keyword_f80> ::= "f80";
+<keyword_string> ::= "string";
+
+<identifier> ::= <letter> (<letter> | <digit> | "_")*;
+
+<integer_literal> ::= <digit>+;
+<decimal_literal> ::= <digit>+ "." <digit>+;
+<bool_literal> ::= "true" | "false";
+<string_literal> ::= "\"" "{any non-quote terminal}"* "\"";
+
+<letter> ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" |
+             "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | 
+             "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" |
+             "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" |
+             "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" |
+             "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" |
+             "v" | "w" | "x" | "y" | "z";
+<digit> ::= "0" | "1" | "2" | "3" | "4" |
+            "5" | "6" | "7" | "8" | "9";
+
+<whitespace> ::= (" " | "\t" | "\n" | "\r")*;
