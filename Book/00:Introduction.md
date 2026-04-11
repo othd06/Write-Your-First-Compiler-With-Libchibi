@@ -14,7 +14,7 @@ The aim of this book is to make it as easy as possible to follow along using onl
 
 I would also recommend that you be at least fairly familiar with C. You needn't be some sort of C god, indeed it isn't even my own preferred language, that title belongs to [Nim](https://nim-lang.org/) (although typically configured to be semantically very C-like), but compilers, even when they're made easy, as I intend to do here, certainly aren't a style of project that are well suited to people who have never touched a line of systems-level code before. In particular, I encourage you to be familiar and comfortable with pointers as well as able to at least read and understand C macros. It is not necessary to have any experience writing programming languages to follow along, indeed, I've aimed the book very much at those who **don't** have that experience.
 
-Additionally, I recommend looking over the [include header](https://github.com/othd06/libchibi/blob/main/chibicc.h) for Libchibi. I don't expect you to understand it all right now but once you get a few chapters in it will start to become a resource you'll begin to follow and _want_ to refer back to so you can begin to write code using it yourself.
+Additionally, I recommend looking over the [include header](https://github.com/othd06/libchibi/blob/main/libchibi.h) for Libchibi. I don't expect you to understand it all right now but once you get a few chapters in it will start to become a resource you'll begin to follow and _want_ to refer back to so you can begin to write code using it yourself.
 
 ### Roadmap:
 
